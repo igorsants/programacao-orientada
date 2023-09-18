@@ -1,0 +1,85 @@
+class Veiculo {
+    private String marca;
+    private String modelo;
+    private int anoFabricacao;
+    private double velocidade;
+
+    public Veiculo(String marca, String modelo, int anoFabricacao) {
+        this.marca = marca;
+        this.modelo = modelo;
+        this.anoFabricacao = anoFabricacao;
+        this.velocidade = 0;
+    }
+
+    public void acelerar(double aumentoVelocidade) {
+        velocidade += aumentoVelocidade;
+        System.out.println("O veículo acelerou para " + velocidade + " km/h");
+    }
+
+    public void frear(double reducaoVelocidade) {
+        if (velocidade >= reducaoVelocidade) {
+            velocidade -= reducaoVelocidade;
+            System.out.println("O veículo reduziu a velocidade para " + velocidade + " km/h");
+        } else {
+            System.out.println("O veículo já está parado.");
+        }
+    }
+
+    public void exibirInfo() {
+        System.out.println("Marca: " + marca);
+        System.out.println("Modelo: " + modelo);
+        System.out.println("Ano de Fabricação: " + anoFabricacao);
+        System.out.println("Velocidade: " + velocidade + " km/h");
+    }
+}
+
+class Carro extends Veiculo {
+    private int numeroPortas;
+    private double consumoCombustivel;
+
+    public Carro(String marca, String modelo, int anoFabricacao, int numeroPortas, double consumoCombustivel) {
+        super(marca, modelo, anoFabricacao);
+        this.numeroPortas = numeroPortas;
+        this.consumoCombustivel = consumoCombustivel;
+    }
+
+    public void ligarArCondicionado() {
+        System.out.println("O ar-condicionado do carro está ligado.");
+    }
+
+    public double calcularConsumoViagem(double distancia) {
+        return distancia / consumoCombustivel;
+    }
+}
+
+class Moto extends Veiculo {
+    private boolean possuiCarenagem;
+
+    public Moto(String marca, String modelo, int anoFabricacao, boolean possuiCarenagem) {
+        super(marca, modelo, anoFabricacao);
+        this.possuiCarenagem = possuiCarenagem;
+    }
+
+    public void empinar() {
+        System.out.println("A moto empinou!");
+    }
+}
+
+class CalculadoraConsumo {
+    public static void main(String[] args) {
+        Carro meuCarro = new Carro("Ford", "Focus", 2020, 4, 12.5);
+        Moto minhaMoto = new Moto("Honda", "CBR 600", 2021, true);
+
+        meuCarro.exibirInfo();
+        meuCarro.acelerar(60);
+        meuCarro.ligarArCondicionado();
+        double consumoViagemCarro = meuCarro.calcularConsumoViagem(200);
+        System.out.println("Consumo de combustível do carro em uma viagem de 200 km: " + consumoViagemCarro + " litros");
+
+        System.out.println();
+
+        minhaMoto.exibirInfo();
+        minhaMoto.acelerar(80);
+        minhaMoto.empinar();
+    }
+}
