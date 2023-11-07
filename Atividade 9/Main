@@ -1,0 +1,9 @@
+package com.mycompany.atividade09;
+
+public class Main {
+    public static void main(String[] args) {
+        Pessoa pessoa = new Pessoa();
+        String saudacao = pessoa.dizerOla();
+        System.out.println(saudacao);
+    }
+}
