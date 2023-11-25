@@ -29,3 +29,295 @@ public class PessoaFisica extends Pessoa {
     }
     // Implementações semelhantes para consultar, atualizar e excluir
 }
+-------------------------------------------------------------------------------------------------------------------------------------------------
+PessoaJuridica.java
+
+package br.com.projeto2.projeto2;
+
+public class PessoaJuridica extends Pessoa {
+
+    private String cnpj;
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
+    }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Pessoa Juridica (%d) Cnpj: %s - Nome: %s - Idade: %d", id,cnpj,getNome(),getIdade());
+    }
+}
+------------------------------------------------------------------------------------------------------------------------------------------------------
+Pessoa.java
+package br.com.projeto2.projeto2;
+
+import br.com.projeto2.projeto2.conexao.ConexaoBanco;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+
+public abstract class Pessoa {
+
+    int id;
+    private String nome;
+    private int idade;
+
+    // Construtores, getters e setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public int getIdade() {
+        return idade;
+    }
+
+    public void setIdade(int idade) {
+        this.idade = idade;
+    }
+
+    public void cadastrar(int tipoPessoa, String cnpjCpf, String nome, int idade) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            String sql = "INSERT INTO pessoa (tipo,cnpj_cpf,nome,idade) VALUES (?,?,?,?)";
+            try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+                stmt.setInt(1, tipoPessoa);
+                stmt.setString(2, cnpjCpf);
+                stmt.setString(3, nome);
+                stmt.setInt(4, idade);
+                stmt.executeUpdate();
+                if (tipoPessoa == 1) {
+                    System.out.println("Cadastro de Pessoa Física realizado com sucesso.");
+                } else {
+                    System.out.println("Cadastro de Pessoa Juridica realizado com sucesso.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Tratar a exceção conforme necessário
+        }
+    }
+
+    public static void consultar(int id) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            String sql = "SELECT * FROM pessoa WHERE idpessoa = ?";
+            try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+                stmt.setInt(1, id);
+                ResultSet rs = stmt.executeQuery();
+                if (rs.next()) {
+                    // Obter os dados da pessoa física
+                    String cnpjCpf = rs.getString("cnpj_cpf");
+                    String nome = rs.getString("nome");
+                    int tipoPessoa = rs.getInt("tipo");
+                    if (tipoPessoa == 1) {
+                        System.out.println("Pessoa Fisica CPF:." + cnpjCpf);
+                    } else {
+                        System.out.println("Pessoa Juridica CNPJ:." + cnpjCpf);
+                    }
+                    System.out.println("Nome: " + nome);
+                } else {
+                    System.out.println("Pessoa Física não encontrada.");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Tratar a exceção conforme necessário
+        }
+    }
+
+    public static void atualizar(int id, String cnpjCpf) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            String sql = "UPDATE pessoa SET cnpj_cpf = ? WHERE idpessoa = ?";
+            try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+                stmt.setString(1, cnpjCpf);
+                stmt.setInt(2, id);
+                stmt.executeUpdate();
+                System.out.println("Atualização de Pessoa realizada com sucesso.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Tratar a exceção conforme necessário
+        }
+    }
+
+    public static void excluir(int id) {
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            String sql = "DELETE FROM pessoa WHERE idpessoa = ?";
+            try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+                stmt.setInt(1, id);
+                stmt.executeUpdate();
+                System.out.println("Exclusão de Pessoa realizada com sucesso.");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Tratar a exceção conforme necessário
+        }
+    }
+
+    public static ArrayList<Pessoa> listar() {
+        ArrayList<Pessoa> result = new ArrayList<Pessoa>();
+        try (Connection conexao = ConexaoBanco.conectar()) {
+            String sql = "SELECT * FROM pessoa";
+            try (PreparedStatement stmt = conexao.prepareStatement(sql)) {
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    // Obter os dados da pessoa física
+                    String cnpjCpf = rs.getString("cnpj_cpf");
+                    String nome = rs.getString("nome");
+                    int tipoPessoa = rs.getInt("tipo");
+                    int idade = rs.getInt("idade");
+                    int idpessoa = rs.getInt("idpessoa");
+                    Pessoa pessoa;
+                    if (tipoPessoa == 1) {
+                        PessoaFisica pessoaFisica = new PessoaFisica();
+                        pessoaFisica.setCpf(cnpjCpf);
+                        pessoa = pessoaFisica;
+                    } else {
+                        PessoaJuridica pessoaJuridica = new PessoaJuridica();
+                        pessoaJuridica.setCnpj(cnpjCpf);
+                        pessoa = pessoaJuridica;
+                    }
+                    pessoa.setNome(nome);
+                    pessoa.setIdade(idade);
+                    pessoa.setId(idpessoa);
+                    result.add(pessoa);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Tratar a exceção conforme necessário
+        }
+        return result;
+    }
+}
+---------------------------------------------------------------------------------------------------------------------------------------
+ConexaoBanco.java
+package br.com.projeto2.projeto2.conexao;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+public class ConexaoBanco {
+    public static Connection conectar() throws SQLException {
+        String url = "jdbc:mysql://localhost:3306/projeto2";
+        String usuario = "root";
+        String senha = "";
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection conexao = DriverManager.getConnection(url, usuario, senha);
+            return conexao;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao conectar ao banco de dados");
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
+        }
+    }
+}
+--------------------------------------------------------------------------------------------------------------------------------------------
+Sistema.java
+package br.com.projeto2.projeto2;
+
+import java.util.ArrayList;
+import java.util.Scanner;
+
+public class Sistema {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Escolha o tipo de pessoa (1 - Física, 2 - Jurídica): ");
+        int tipoPessoa = scanner.nextInt();
+        Pessoa pessoa;
+        if (tipoPessoa == 1) {
+            pessoa = new PessoaFisica();
+        } else {
+            pessoa = new PessoaJuridica();
+        }
+
+        System.out.println("Escolha a operação (1 - Cadastrar, 2 - Consultar, 3 - Atualizar, 4 - Excluir, 5 - Listar): ");
+        int operacao = scanner.nextInt();
+
+        switch (operacao) {
+            case 1:{
+                if (tipoPessoa == 1) {
+                    System.out.println("(Insira o cpf): ");
+                } else {
+                    System.out.println("(Insira o cnpj): ");
+                } 
+                String cnpjCpf = scanner.next();
+                System.out.println("(Insira o Nome): ");
+                String nome = scanner.next();
+                System.out.println("(Insira a Idade): ");
+                int idade = scanner.nextInt();
+                pessoa.cadastrar(tipoPessoa, cnpjCpf, nome, idade);
+                break;
+                }
+            case 2:{
+                System.out.println("(Insira o id da pessoa): ");
+                int pessoaId = scanner.nextInt();
+                Pessoa.consultar(pessoaId);
+                break;
+                }
+            case 3: {
+                System.out.println("Informe o id da pessoa: ");
+                int id = scanner.nextInt();
+                if (tipoPessoa == 1) {
+                    System.out.println("(Insira o cpf): ");
+                } else {
+                    System.out.println("(Insira o cnpj): ");
+                } 
+                String cnpjCpf = scanner.next();
+                Pessoa.atualizar(id,cnpjCpf);
+                break;
+                }
+            case 4:{
+                System.out.println("Informe o id da pessoa: ");
+                int id = scanner.nextInt();
+                Pessoa.excluir(id);
+                break;
+                }
+            case 5:{
+                ArrayList<Pessoa> pessoas = Pessoa.listar();
+                for (Pessoa p : pessoas) {
+                    System.out.println(p);
+                }
+                break;
+                }
+            default:
+                System.out.println("Operação inválida");
+        }
+    }
+}
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
